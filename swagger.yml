@@ -1,0 +1,141 @@
+swagger: '2.0'
+info:
+    description: This is the swagger file that goes with our server code
+    version: '1.0.0'
+    title: Swagger Rest Article
+consumes:
+    - application/json
+produces:
+    - application/json
+
+basePath: /api
+
+paths:
+    /user:
+        get:
+            operationId: user.get_all
+            tags:
+                - user
+            summary: Read the entire list of user
+            description: Read all user data
+            responses:
+                200:
+                    description: Successfully read user data
+                    schema:
+                        type: array
+                        items:
+                            properties:
+                                id:
+                                    type: integer
+                                fullName:
+                                    type: string
+                                email:
+                                    type: string
+                                age:
+                                    type: integer
+
+        post:
+            operationId: user.post
+            tags:
+                - user
+            summary: Create a user and add it to the user list
+            description: Create a new user in the user list
+            parameters:
+                - name: user
+                  in: body
+                  description: user to create
+                  required: True
+                  schema:
+                      type: object
+                      properties:
+                          id:
+                              type: integer
+                              description: Id of user to create
+                          fullName:
+                              type: string
+                              description: Full name of user to create
+                          email:
+                              type: string
+                              description: Email of user to create
+                          age:
+                              type: integer
+                              description: Age of user to create
+            responses:
+                201:
+                    description: Successfully created user in list
+
+    /user/{id}:
+        get:
+            operationId: user.get_by_id
+            tags:
+                - user
+            summary: Read one user from the user list
+            description: Read one user from the user list
+            parameters:
+                - name: id
+                  in: path
+                  description: Id of the user to get from the list
+                  type: integer
+                  required: True
+            responses:
+                200:
+                    description: Successfully read user from user list operation
+                    schema:
+                        properties:
+                            id:
+                                type: integer
+                            fullName:
+                                type: string
+                            email:
+                                type: string
+                            age:
+                                type: integer
+
+        put:
+            operationId: user.put
+            tags:
+                - user
+            summary: Update a user in the user list
+            description: Update a user in the user list
+            parameters:
+                - name: id
+                  in: path
+                  description: Id of the user to update in the list
+                  type: integer
+                  required: True
+                - name: user
+                  in: body
+                  schema:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Id of user to update
+                        fullName:
+                            type: string
+                            description: Full name of user to update
+                        email:
+                          type: string
+                          description: Email of user to update
+                        age:
+                          type: integer
+                          description: Age of user to update
+            responses:
+            responses:
+                200:
+                    description: Successfully updated user in user list
+
+        delete:
+            operationId: user.delete
+            tags:
+                - user
+            summary: Delete a user from the user list
+            description: Delete a user
+            parameters:
+                - name: id
+                  in: path
+                  type: integer
+                  required: True
+            responses:
+                200:
+                    description: Successfully deleted a user from user list
