@@ -8,7 +8,7 @@ consumes:
 produces:
     - application/json
 
-basePath: /api
+basePath: /v1
 
 paths:
     /user:
@@ -17,22 +17,22 @@ paths:
             tags:
                 - user
             summary: Read the entire list of user
-            description: Read all user data
+            description: Read the list of user
             responses:
                 200:
-                    description: Successfully read user data
+                    description: Successfully read user list data
                     schema:
                         type: array
                         items:
                             properties:
-                                id:
-                                    type: integer
-                                fullName:
+                                full_name:
                                     type: string
                                 email:
                                     type: string
                                 age:
                                     type: integer
+                                user_id:
+                                    type: string
 
         post:
             operationId: user.post
@@ -48,15 +48,12 @@ paths:
                   schema:
                       type: object
                       properties:
-                          id:
-                              type: integer
-                              description: Id of user to create
-                          fullName:
+                          full_name:
                               type: string
                               description: Full name of user to create
                           email:
                               type: string
-                              description: Email of user to create
+                              description: Email user to create
                           age:
                               type: integer
                               description: Age of user to create
@@ -64,7 +61,7 @@ paths:
                 201:
                     description: Successfully created user in list
 
-    /user/{id}:
+    /user/{user_id}:
         get:
             operationId: user.get_by_id
             tags:
@@ -72,24 +69,24 @@ paths:
             summary: Read one user from the user list
             description: Read one user from the user list
             parameters:
-                - name: id
+                - name: user_id
                   in: path
-                  description: Id of the user to get from the list
-                  type: integer
+                  description: user_id of the user to get from data
+                  type: string
                   required: True
             responses:
                 200:
-                    description: Successfully read user from user list operation
+                    description: Successfully read user from user data
                     schema:
                         properties:
-                            id:
-                                type: integer
-                            fullName:
+                            full_name:
                                 type: string
                             email:
                                 type: string
                             age:
                                 type: integer
+                            user_id:
+                                type: string
 
         put:
             operationId: user.put
@@ -98,29 +95,24 @@ paths:
             summary: Update a user in the user list
             description: Update a user in the user list
             parameters:
-                - name: id
+                - name: user_id
                   in: path
-                  description: Id of the user to update in the list
-                  type: integer
+                  description: user_id of the user to update data
+                  type: string
                   required: True
                 - name: user
                   in: body
                   schema:
                       type: object
                       properties:
-                        id:
-                          type: integer
-                          description: Id of user to update
-                        fullName:
-                            type: string
-                            description: Full name of user to update
-                        email:
-                          type: string
-                          description: Email of user to update
-                        age:
-                          type: integer
-                          description: Age of user to update
-            responses:
+                          full_name:
+                              type: string
+                          email:
+                              type: string
+                          age:
+                              type: integer
+                          user_id:
+                              type: string
             responses:
                 200:
                     description: Successfully updated user in user list
@@ -132,9 +124,9 @@ paths:
             summary: Delete a user from the user list
             description: Delete a user
             parameters:
-                - name: id
+                - name: user_id
                   in: path
-                  type: integer
+                  type: string
                   required: True
             responses:
                 200:

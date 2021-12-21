@@ -1,90 +1,135 @@
-from flask import make_response, abort
+from flask import make_response, abort, jsonify
+from elasticsearch import Elasticsearch, helpers
+import string
+import random
 
-data = {
-    1: {
-        "id" : 1,
-        "fullName" : "Fariz Afif",
-        "email" : "farizaiis@hotmail.com",
-        "age": 25
-    },
-    2: {
-        "id" : 2,
-        "fullName" : "Fariz",
-        "email" : "fariz@gmail.com",
-        "age" : 24
-    },
-    3: {
-        "id" : 3,
-        "fullName" : "Aisyah",
-        "email" : "aisyah@gmail.com",
-        "age" : 23
-    },
-    4: {
+es = Elasticsearch(host="localhost", port=9200)
+es = Elasticsearch()
+index = "train_elastic_user"
 
-        "fullName" : "Test",
-        "email" : "test@gmail.com",
-        "age" : 22
-    },
-    5: {
-        "fullName" : "Abc",
-        "email" : "abc@gmail.com",
-        "age" : 21
-    },
-}
 
 def get_all():
-    return[data[key] for key in sorted(data.keys())]
+    print("test")
+    query = {
+        "query": {
+            "match_all" : {}
+        }
+    }
+    result = helpers.scan(es, index=index, body=query)
 
+    data = [d["_source"] for d in result]
 
-def get_by_id(id):
-    if id in data:
-        user = data.get(id)
-    else:
-        abort(
-            404, "Cannot found user with id {id}".format(id=id)
-        )
-    return user
+    return jsonify(data)
 
 def post(user):
-    id = user.get("id", None)
-    fullName = user.get("fullName", None)
+    full_name = user.get("full_name", None)
     email = user.get("email", None)
     age = user.get("age", None)
+    user_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=11))
 
-    if email not in data and email and id and fullName and age is not None:
-        data[id] = {
-            "id" : id,
-            "fullName" : fullName,
+    query = {
+		"query": {
+			"match_phrase": {
+				"email": email
+			}
+		}
+	}
+
+    result = es.search(index=index, body=query)
+	
+    if len(result["hits"]["hits"])==0 and email:
+        data = {
+            "full_name" : full_name,
             "email" : email,
-            "age" : age
+            "age" : age,
+            "user_id" : user_id
         }
-        return data[id], 201
+        es.index(index=index,body=data)
+        
+        res = {
+            "status" : "Success",
+            "message" : "Data with email {email} succesfully created".format(email=email)
+        }
+
+        return make_response(
+            jsonify(res)
+        )
     else:
         abort(
             406,
-            "User with email {email} already exist".format(id=id)
+			"Email {email} already use".format(email=email)
         )
 
-def put(id, user):
-    if id in data:
-        data[id]["fullName"] = user.get("fullName")
-        data[id]["email"] = user.get("email")
-        data[id]["age"] = user.get("age")
+def get_by_id(user_id):
+    query = {
+		"query": {
+			"match_phrase": {
+				"user_id": user_id
+			}
+		}
+	}
+    result = es.search(index=index, body=query)
 
-        return data[id]
+    if len(result["hits"]["hits"]) > 0:
+        return_value = result["hits"]["hits"][0]["_source"]
+        del return_value["password"]
+        return jsonify(return_value)
 
     else:
         abort(
-            404, "Cannot found user with id {id}".format(id=id)
-        )
+			404, "User with user_id {user_id} not found".format(user_id=user_id)
+		)
 
-def delete(id):
-    if id in data:
-        del data[id]
+def put(user_id, user):
+    query = {
+		"query": {
+			"match_phrase": {
+				"user_id": user_id
+			}
+		}
+	}
+    result = es.search(index=index, body=query)
+	
+    if len(result["hits"]["hits"])>=1:
+        data= {
+			"doc": {
+				"full_name": user.get("full_name", result["hits"]["hits"][0]["_source"]["full_name"]),
+				"email": user.get("email", result["hits"]["hits"][0]["_source"]["email"]),
+				"age": user.get("age", result["hits"]["hits"][0]["_source"]["age"]),
+			}
+		}
+        
+        es.update(
+			index=index,
+			id=result["hits"]["hits"][0]["_id"],
+			body=data
+		)
+		
+        return jsonify(data)
+    else:
+        abort(
+			404, "User with user_id {user_id} not found".format(user_id=user_id)
+		)
+
+
+def delete(user_id):
+    query = {
+		"query": {
+			"match_phrase": {
+				"user_id": user_id
+			}
+		}
+	}
+    
+    result = es.search(index=index, body=query)
+    
+    if len(result["hits"]["hits"])>=1:
+        es.delete(index=index, id=result["hits"]["hits"][0]["_id"])
+
         return make_response(
-            "Successfully delete the data", 200
-        )
+			"{user_id} successfully deleted".format(user_id=user_id), 200
+		)
     else:
         abort(
-            404, "Cannot found user with id {id}".format(id=id)
-        )
+			404, "User with user_id {user_id} not found".format(user_id=user_id)
+		)
