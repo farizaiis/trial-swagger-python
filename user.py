@@ -72,7 +72,6 @@ def get_by_id(user_id):
 
     if len(result["hits"]["hits"]) > 0:
         return_value = result["hits"]["hits"][0]["_source"]
-        del return_value["password"]
         return jsonify(return_value)
 
     else:
@@ -126,9 +125,14 @@ def delete(user_id):
     if len(result["hits"]["hits"])>=1:
         es.delete(index=index, id=result["hits"]["hits"][0]["_id"])
 
+        res = {
+            "status" : "Success",
+            "message" : "Data with user_id {user_id} succesfully deleted".format(user_id=user_id)
+        }
+
         return make_response(
-			"{user_id} successfully deleted".format(user_id=user_id), 200
-		)
+            jsonify(res)
+        )
     else:
         abort(
 			404, "User with user_id {user_id} not found".format(user_id=user_id)
